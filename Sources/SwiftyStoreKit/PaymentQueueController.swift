@@ -49,23 +49,12 @@ public protocol PaymentQueue: AnyObject {
     
     func add(_ payment: SKPayment)
     
-    func start(_ downloads: [SKDownload])
-    func pause(_ downloads: [SKDownload])
-    func resume(_ downloads: [SKDownload])
-    func cancel(_ downloads: [SKDownload])
-    
     func restoreCompletedTransactions(withApplicationUsername username: String?)
     
     func finishTransaction(_ transaction: SKPaymentTransaction)
 }
 
 extension SKPaymentQueue: PaymentQueue {
-    
-    #if os(watchOS) && swift(<5.3)
-    public func resume(_ downloads: [SKDownload]) {
-        resumeDownloads(downloads)
-    }
-    #endif
     
 }
 
@@ -193,24 +182,7 @@ class PaymentQueueController: NSObject, SKPaymentTransactionObserver {
         paymentQueue.finishTransaction(skTransaction)
     }
     
-    func start(_ downloads: [SKDownload]) {
-        paymentQueue.start(downloads)
-    }
-    
-    func pause(_ downloads: [SKDownload]) {
-        paymentQueue.pause(downloads)
-    }
-    
-    func resume(_ downloads: [SKDownload]) {
-        paymentQueue.resume(downloads)
-    }
-    
-    func cancel(_ downloads: [SKDownload]) {
-        paymentQueue.cancel(downloads)
-    }
-    
     var shouldAddStorePaymentHandler: ShouldAddStorePaymentHandler?
-    var updatedDownloadsHandler: UpdatedDownloadsHandler?
     
     
     // MARK: - SKPaymentTransactionObserver
@@ -268,10 +240,6 @@ class PaymentQueueController: NSObject, SKPaymentTransactionObserver {
     
     func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
         restorePurchasesController.restoreCompletedTransactionsFinished()
-    }
-    
-    func paymentQueue(_ queue: SKPaymentQueue, updatedDownloads downloads: [SKDownload]) {
-        updatedDownloadsHandler?(downloads)
     }
     
     #if !os(watchOS)
