@@ -194,7 +194,9 @@ class PaymentQueueController: NSObject, SKPaymentTransactionObserver {
     #endif
     
     var shouldAddStorePaymentHandler: ShouldAddStorePaymentHandler?
+    #if !os(visionOS)
     var updatedDownloadsHandler: UpdatedDownloadsHandler?
+    #endif
     
     // MARK: SKPaymentTransactionObserver
     func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
