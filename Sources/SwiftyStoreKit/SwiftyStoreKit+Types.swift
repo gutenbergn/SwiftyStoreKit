@@ -106,6 +106,9 @@ public protocol PaymentTransaction {
     var transactionDate: Date? { get }
     var transactionState: SKPaymentTransactionState { get }
     var transactionIdentifier: String? { get }
+    #if !os(visionOS)
+    var downloads: [SKDownload] { get }
+    #endif
 }
 
 /// Add PaymentTransaction conformance to SKPaymentTransaction
@@ -127,7 +130,6 @@ public struct RetrieveResults {
 /// Purchase result
 public enum PurchaseResult {
     case success(purchase: PurchaseDetails)
-    case deferred(purchase: PurchaseDetails)
     case error(error: SKError)
 }
 
@@ -143,6 +145,9 @@ public struct RestoreResults {
 }
 
 public typealias ShouldAddStorePaymentHandler = (_ payment: SKPayment, _ product: SKProduct) -> Bool
+#if !os(visionOS)
+public typealias UpdatedDownloadsHandler = (_ downloads: [SKDownload]) -> Void
+#endif
 
 // MARK: Receipt verification
 
@@ -174,7 +179,7 @@ public enum VerifySubscriptionResult {
     case notPurchased
 }
 
-public enum SubscriptionType: Hashable {
+public enum SubscriptionType {
     case autoRenewable
     case nonRenewing(validDuration: TimeInterval)
 }
@@ -218,10 +223,7 @@ public struct ReceiptItem: Purchased, Codable {
     /// Indicates whether or not the subscription item is currently within an intro offer period.
     public var isInIntroOfferPeriod: Bool
     
-    /// An indicator that a subscription has been canceled due to an upgrade. This field is only present for upgrade transactions.
-    public var isUpgraded: Bool
-    
-    public init(productId: String, quantity: Int, transactionId: String, originalTransactionId: String, purchaseDate: Date, originalPurchaseDate: Date, webOrderLineItemId: String?, subscriptionExpirationDate: Date?, cancellationDate: Date?, isTrialPeriod: Bool, isInIntroOfferPeriod: Bool, isUpgraded: Bool) {
+    public init(productId: String, quantity: Int, transactionId: String, originalTransactionId: String, purchaseDate: Date, originalPurchaseDate: Date, webOrderLineItemId: String?, subscriptionExpirationDate: Date?, cancellationDate: Date?, isTrialPeriod: Bool, isInIntroOfferPeriod: Bool) {
         self.productId = productId
         self.quantity = quantity
         self.transactionId = transactionId
@@ -233,7 +235,6 @@ public struct ReceiptItem: Purchased, Codable {
         self.cancellationDate = cancellationDate
         self.isTrialPeriod = isTrialPeriod
         self.isInIntroOfferPeriod = isInIntroOfferPeriod
-        self.isUpgraded = isUpgraded
     }
 }
 

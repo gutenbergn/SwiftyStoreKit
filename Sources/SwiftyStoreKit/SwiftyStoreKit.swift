@@ -84,11 +84,6 @@ public class SwiftyStoreKit {
         
         paymentQueueController.completeTransactions(CompleteTransactions(atomically: atomically, callback: completion))
     }
-
-    fileprivate func onEntitlementRevocation(completion: @escaping ([String]) -> Void) {
-
-        paymentQueueController.onEntitlementRevocation(EntitlementRevocation(callback: completion))
-    }
     
     fileprivate func finishTransaction(_ transaction: PaymentTransaction) {
         
@@ -99,8 +94,6 @@ public class SwiftyStoreKit {
         switch result {
         case .purchased(let purchase):
             return .success(purchase: purchase)
-        case .deferred(let purchase):
-            return .deferred(purchase: purchase)
         case .failed(let error):
             return .error(error: error)
         case .restored(let purchase):
@@ -114,9 +107,6 @@ public class SwiftyStoreKit {
         for result in results {
             switch result {
             case .purchased(let purchase):
-                let error = storeInternalError(description: "Cannot purchase product \(purchase.productId) from restore purchases path")
-                restoreFailedPurchases.append((error, purchase.productId))
-            case .deferred(let purchase):
                 let error = storeInternalError(description: "Cannot purchase product \(purchase.productId) from restore purchases path")
                 restoreFailedPurchases.append((error, purchase.productId))
             case .failed(let error):
@@ -197,14 +187,6 @@ extension SwiftyStoreKit {
         
         sharedInstance.completeTransactions(atomically: atomically, completion: completion)
     }
-
-    /// Entitlement revocation notification
-    ///   - Parameter completion: handler for result (list of product identifiers revoked)
-    @available(iOS 14, tvOS 14, OSX 11, watchOS 7, macCatalyst 14, *)
-    public class func onEntitlementRevocation(completion: @escaping ([String]) -> Void) {
-
-        sharedInstance.onEntitlementRevocation(completion: completion)
-    }
     
     /// Finish a transaction
     /// 
@@ -222,6 +204,29 @@ extension SwiftyStoreKit {
             sharedInstance.paymentQueueController.shouldAddStorePaymentHandler = shouldAddStorePaymentHandler
         }
     }
+    
+    #if !os(visionOS)
+    /// Register a handler for `paymentQueue(_:updatedDownloads:)`
+    /// - seealso: `paymentQueue(_:updatedDownloads:)`
+    public static var updatedDownloadsHandler: UpdatedDownloadsHandler? {
+        didSet {
+            sharedInstance.paymentQueueController.updatedDownloadsHandler = updatedDownloadsHandler
+        }
+    }
+    
+    public class func start(_ downloads: [SKDownload]) {
+        sharedInstance.paymentQueueController.start(downloads)
+    }
+    public class func pause(_ downloads: [SKDownload]) {
+        sharedInstance.paymentQueueController.pause(downloads)
+    }
+    public class func resume(_ downloads: [SKDownload]) {
+        sharedInstance.paymentQueueController.resume(downloads)
+    }
+    public class func cancel(_ downloads: [SKDownload]) {
+        sharedInstance.paymentQueueController.cancel(downloads)
+    }
+    #endif
 }
 
 extension SwiftyStoreKit {

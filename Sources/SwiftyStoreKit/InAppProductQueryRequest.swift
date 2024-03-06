@@ -26,24 +26,17 @@ import StoreKit
 
 typealias InAppProductRequestCallback = (RetrieveResults) -> Void
 
-public protocol InAppRequest: AnyObject {
+public protocol InAppRequest: class {
     func start()
     func cancel()
 }
 
-protocol InAppProductRequest: InAppRequest {
-    var hasCompleted: Bool { get }
-    var cachedResults: RetrieveResults? { get }
-}
+protocol InAppProductRequest: InAppRequest { }
 
 class InAppProductQueryRequest: NSObject, InAppProductRequest, SKProductsRequestDelegate {
 
     private let callback: InAppProductRequestCallback
     private let request: SKProductsRequest
-
-    private(set) var cachedResults: RetrieveResults?
-
-    var hasCompleted: Bool { cachedResults != nil }
 
     deinit {
         request.delegate = nil
@@ -59,7 +52,6 @@ class InAppProductQueryRequest: NSObject, InAppProductRequest, SKProductsRequest
     func start() {
         request.start()
     }
-
     func cancel() {
         request.cancel()
     }
@@ -69,12 +61,8 @@ class InAppProductQueryRequest: NSObject, InAppProductRequest, SKProductsRequest
 
         let retrievedProducts = Set<SKProduct>(response.products)
         let invalidProductIDs = Set<String>(response.invalidProductIdentifiers)
-        let results = RetrieveResults(
-            retrievedProducts: retrievedProducts,
-            invalidProductIDs: invalidProductIDs, error: nil
-        )
-        self.cachedResults = results
-        performCallback(results)
+        performCallback(RetrieveResults(retrievedProducts: retrievedProducts,
+            invalidProductIDs: invalidProductIDs, error: nil))
     }
 
     func requestDidFinish(_ request: SKRequest) {

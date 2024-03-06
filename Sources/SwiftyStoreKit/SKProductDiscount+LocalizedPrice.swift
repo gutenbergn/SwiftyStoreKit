@@ -60,3 +60,4 @@ public extension SKProductDiscount {
     }
     
 }
+
